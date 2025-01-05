@@ -1,10 +1,10 @@
 import streamlit as st
 from openai import AzureOpenAI
-import json
 import os
 from dotenv import load_dotenv
+from azure.identity import DefaultAzureCredential
 
-from cosmosdb import get_cosmosdb_info, get_items, update_item, delete_item, create_item
+from cosmosdb import get_cosmosdb_info, get_items, update_item, delete_item, create_item, create_unique_id
 
 def main():
     client = AzureOpenAI(
@@ -61,12 +61,10 @@ def main():
         # Store chat history to Cosmos DB
         try:
             if len(history) == 0:
-                import uuid
-                guid = uuid.uuid4()
                 item = {
                     "chat_history": st.session_state.messages,
-                    "id": str(guid),
-                    "userId": str(guid)
+                    "id": uuid,
+                    "userId": uuid
                 }
                 create_item(container, item)
             else:
@@ -86,15 +84,19 @@ def main():
 
 if __name__ == '__main__':
 
+    credential = DefaultAzureCredential()
+
     load_dotenv()
 
     accountName = os.getenv("accountName")
     databaseName = os.getenv("databaseName")
     containerName = os.getenv("collection")
 
+    uuid = create_unique_id(credential)
+
     try:
-        client, database, container = get_cosmosdb_info(endpoint=f"https://{accountName}.documents.azure.com:443/", database_name=databaseName, container_name=containerName)
-        history = get_items(container)
+        client, database, container = get_cosmosdb_info(credential=credential, endpoint=f"https://{accountName}.documents.azure.com:443/", database_name=databaseName, container_name=containerName)
+        history = get_items(container, query = f"SELECT * FROM c WHERE c.userId = '{uuid}'")
     except Exception as e:
         st.error(f"Error: {e}")
 
