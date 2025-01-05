@@ -1,0 +1,9 @@
+openai
+fastapi
+pydantic
+python-dotenv
+streamlit
+requests
+uvicorn
+azure-cosmos
+azure-identity

@@ -1,0 +1,78 @@
+# Update .env file with relevant values
+# Get aadToken value by running get-authorization.ps1
+
+### Get Cosmos DB database
+GET https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+
+### Get Cosmos DB collection
+GET https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}/colls/{{$dotenv collection}}
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+
+### Create a new document in Cosmos DB collection
+POST https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}/colls/{{$dotenv collection}}/docs
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+x-ms-documentdb-partitionkey: ["5"]
+
+{"chat_history": [
+  {"role": "user", "content": "write about zurich"},
+  {"role": "assistant", "content": "Zurich, the largest city in Switzerland."},
+  {"role": "user", "content": "about zagreb"},
+  {"role": "assistant", "content": "Zagreb, the capital of Croatia."}
+  ],
+  "id": "5",
+  "userId": "5"
+}
+
+### List all documents in Cosmos DB collection
+GET https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}/colls/{{$dotenv collection}}/docs
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+
+### Query documents in Cosmos DB collection
+POST https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}/colls/{{$dotenv collection}}/docs
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+Content-Type: application/query+json
+x-ms-documentdb-isquery: true
+x-ms-documentdb-query-enablecrosspartition: true
+x-ms-documentdb-partitionkeyrangeid: 0
+x-ms-documentdb-populatequerymetrics: true
+x-ms-documentdb-query-enable-scan: true
+x-ms-documentdb-query-parallelizecrosspartitionquery: true
+x-ms-documentdb-responsecontinuationtokenlimitinkb: 1
+
+{  
+  "query": "SELECT * FROM test t WHERE t.userId = @userId",  
+  "parameters": [  
+    {  
+      "name": "@userId",  
+      "value": "0"  
+    }
+  ]  
+}
+
+### Patch a document in Cosmos DB collection
+PATCH https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}/colls/{{$dotenv collection}}/docs/0
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+x-ms-documentdb-partitionkey: ["0"]
+
+{
+   "operations":[
+   {
+       "op": "set",
+       "path": "/chat_history/2/content",
+       "value": "About Zagreb"
+    }
+   ]
+}
+
+### Delete a document in Cosmos DB collection
+DELETE https://{{$dotenv accountName}}.documents.azure.com/dbs/{{$dotenv databaseName}}/colls/{{$dotenv collection}}/docs/5
+Authorization: {{$dotenv token}}
+x-ms-version: 2018-12-31
+x-ms-documentdb-partitionkey: ["5"]
